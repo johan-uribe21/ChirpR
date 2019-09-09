@@ -25,7 +25,8 @@ class TagViewSet(viewsets.GenericViewSet,
 
 
 class DescriptionViewSet(viewsets.GenericViewSet,
-                         mixins.ListModelMixin):
+                         mixins.ListModelMixin,
+                         mixins.CreateModelMixin):
     """Manage descriptions in the database"""
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -36,6 +37,6 @@ class DescriptionViewSet(viewsets.GenericViewSet,
         """Return objects for the current authenticated user only"""
         return self.queryset.filter(user=self.request.user).order_by('-name')
 
-    # def perform_create(self, serializer):
-    #     """Create a new description"""
-    #     serializer.save(user=self.request.user)
+    def perform_create(self, serializer):
+        """Create a new description"""
+        serializer.save(user=self.request.user)
