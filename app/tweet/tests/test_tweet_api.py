@@ -5,12 +5,27 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tweet
+from core.models import Tweet, Tag, Description
 
-from tweet.serializers import TweetSerializer
+from tweet.serializers import TweetSerializer, TweetDetailSerializer
 
 
 TWEET_URL = reverse('tweet:tweet-list')
+
+
+def detail_url(tweet_id):
+    """Return tweet detail url"""
+    return reverse('tweet:tweet-detail', args=[tweet_id])
+
+
+def sample_tag(user, name='Main course'):
+    """Create and return a sample tag"""
+    return Tag.objects.create(user=user, name=name)
+
+
+def sample_description(user, name='Cinnamon'):
+    """Create and return a sample description"""
+    return Description.objects.create(user=user,  name=name)
 
 
 def sample_tweet(user, **params):
@@ -74,4 +89,16 @@ class PrivateTweetApiTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_view_tweet_detail(self):
+        """Test viewing a tweet detail"""
+        tweet = sample_tweet(user=self.user)
+        tweet.tags.add(sample_tag(user=self.user))
+        tweet.descriptions.add(sample_description(user=self.user))
+
+        url = detail_url(tweet.id)
+        res = self.client.get(url)
+
+        serializer = TweetDetailSerializer(tweet)
         self.assertEqual(res.data, serializer.data)
