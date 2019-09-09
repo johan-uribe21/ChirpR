@@ -2,7 +2,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import Tag, Description
+from core.models import Tag, Description, Tweet
 from tweet import serializers
 
 
@@ -32,3 +32,15 @@ class DescriptionViewSet(BaseTweetAttrViewSet):
     """Manage descriptions in the database"""
     queryset = Description.objects.all()
     serializer_class = serializers.DescriptionSerializer
+
+
+class TweetViewSet(viewsets.ModelViewSet):
+    """Manage tweets in the database"""
+    serializer_class = serializers.TweetSerializer
+    queryset = Tweet.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """Retrieve the tweets for the authenticated user"""
+        return self.queryset.filter(user=self.request.user)
