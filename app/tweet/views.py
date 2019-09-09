@@ -51,3 +51,7 @@ class TweetViewSet(viewsets.ModelViewSet):
             return serializers.TweetDetailSerializer
 
         return self.serializer_class
+
+    def perform_create(self, serializer):
+        """Create a new tweet"""
+        serializer.save(user=self.request.user)

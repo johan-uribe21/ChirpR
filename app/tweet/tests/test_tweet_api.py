@@ -102,3 +102,47 @@ class PrivateTweetApiTest(TestCase):
 
         serializer = TweetDetailSerializer(tweet)
         self.assertEqual(res.data, serializer.data)
+
+    def test_create_basic_tweet(self):
+        """Test creating a tweet"""
+        payload = {'title': 'Hello'}
+        res = self.client.post(TWEET_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        tweet = Tweet.objects.get(id=res.data['id'])
+        for key in payload.keys():
+            self.assertEqual(payload[key], getattr(tweet, key))
+
+    def test_create_recipe_with_tags(self):
+        """Test creating a recipe with tags"""
+        tag1 = sample_tag(user=self.user, name='Vegan')
+        tag2 = sample_tag(user=self.user, name='Dessert')
+        payload = {
+            'title': 'Avocado lime cheesecake',
+            'tags': [tag1.id, tag2.id]
+        }
+        res = self.client.post(TWEET_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        tweet = Tweet.objects.get(id=res.data['id'])
+        tags = tweet.tags.all()
+        self.assertEqual(tags.count(), 2)
+        self.assertIn(tag1, tags)
+        self.assertIn(tag2, tags)
+
+    def test_create_tweet_with_descriptions(self):
+        """Test creating a tweet with descriptions"""
+        description1 = sample_description(user=self.user, name='Prawn')
+        description2 = sample_description(user=self.user, name='Ginger')
+        payload = {
+            'title': 'Prawn with ginger',
+            'descriptions': [description1.id, description2.id]
+        }
+        res = self.client.post(TWEET_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        tweet = Tweet.objects.get(id=res.data['id'])
+        descriptions = tweet.descriptions.all()
+        self.assertEqual(descriptions.count(), 2)
+        self.assertIn(description1, descriptions)
+        self.assertIn(description1, descriptions)
