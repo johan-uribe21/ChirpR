@@ -60,3 +60,17 @@ class Description(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Tweet(models.Model):
+    """Tweet object"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255)
+    descriptions = models.ManyToManyField('Description')
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        return self.title

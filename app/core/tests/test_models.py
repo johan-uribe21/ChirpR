@@ -61,3 +61,12 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(description), description.name)
+
+    def test_tweet_str(self):
+        """test the tweet string representation"""
+        tweet = models.Tweet.objects.create(
+            user=sample_user(),
+            title='Steak',
+        )
+
+        self.assertEqual(str(tweet), tweet.title)
