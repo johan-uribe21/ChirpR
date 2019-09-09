@@ -1,3 +1,8 @@
+import tempfile
+import os
+
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -11,6 +16,11 @@ from tweet.serializers import TweetSerializer, TweetDetailSerializer
 
 
 TWEET_URL = reverse('tweet:tweet-list')
+
+
+def image_upload_url(tweet_id):
+    """Return URL for tweet image upload"""
+    return reverse('tweet:tweet-upload-image', args=[tweet_id])
 
 
 def detail_url(tweet_id):
@@ -61,7 +71,7 @@ class PrivateTweetApiTest(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_retrieve_tweets(self):
-        """Test retrieving a list of recipes"""
+        """Test retrieving a list of tweets"""
         sample_tweet(user=self.user)
         sample_tweet(user=self.user)
 
@@ -113,8 +123,8 @@ class PrivateTweetApiTest(TestCase):
         for key in payload.keys():
             self.assertEqual(payload[key], getattr(tweet, key))
 
-    def test_create_recipe_with_tags(self):
-        """Test creating a recipe with tags"""
+    def test_create_tweet_with_tags(self):
+        """Test creating a tweet with tags"""
         tag1 = sample_tag(user=self.user, name='Vegan')
         tag2 = sample_tag(user=self.user, name='Dessert')
         payload = {
@@ -146,3 +156,36 @@ class PrivateTweetApiTest(TestCase):
         self.assertEqual(descriptions.count(), 2)
         self.assertIn(description1, descriptions)
         self.assertIn(description1, descriptions)
+
+
+class TweetImageUploadTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user('user@user.com', 'testpass')
+        self.client.force_authenticate(self.user)
+        self.tweet = sample_tweet(user=self.user)
+
+    def tearDown(self):
+        self.tweet.image.delete()
+
+    def test_upload_image_to_tweet(self):
+        """Test uploading an image to tweet"""
+        url = image_upload_url(self.tweet.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', (10, 10))
+            img.save(ntf, format='JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+
+        self.tweet.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.tweet.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        url = image_upload_url(self.tweet.id)
+        res = self.client.post(url, {'image': 'not image'}, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

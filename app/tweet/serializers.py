@@ -42,3 +42,12 @@ class TweetDetailSerializer(TweetSerializer):
     """Serialize a tweet detail"""
     descriptions = DescriptionSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+
+
+class TweetImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to tweets"""
+
+    class Meta:
+        model = Tweet
+        fields = ('id', 'image')
+        read_only_fields = ('id',)
