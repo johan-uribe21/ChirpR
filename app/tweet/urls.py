@@ -6,6 +6,7 @@ from tweet import views
 
 router = DefaultRouter()
 router.register('tags', views.TagViewSet)
+router.register('descriptions', views.DescriptionViewSet)
 
 app_name = 'tweet'
 

@@ -2,7 +2,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import Tag
+from core.models import Tag, Description
 from tweet import serializers
 
 
@@ -22,3 +22,20 @@ class TagViewSet(viewsets.GenericViewSet,
     def perform_create(self, serializer):
         """Create a new tag"""
         serializer.save(user=self.request.user)
+
+
+class DescriptionViewSet(viewsets.GenericViewSet,
+                         mixins.ListModelMixin):
+    """Manage descriptions in the database"""
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = Description.objects.all()
+    serializer_class = serializers.DescriptionSerializer
+
+    def get_queryset(self):
+        """Return objects for the current authenticated user only"""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+
+    # def perform_create(self, serializer):
+    #     """Create a new description"""
+    #     serializer.save(user=self.request.user)
